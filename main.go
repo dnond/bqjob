@@ -1,43 +1,76 @@
 package main
 
 import (
-	"context"
-	"log"
+	"bqjob/bqservice"
+	"bqjob/jobinfo"
+	"fmt"
 
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
-
-	"cloud.google.com/go/bigquery"
-	"github.com/k0kubun/pp"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	ctx := context.Background()
-
-	projectID := "escape-idol-01"
-	serviceAccountFile := "/Users/workman/.google/bigquery/escape_Idol-8d1c9fbb52c7.json"
-
-	ops := option.WithServiceAccountFile(serviceAccountFile)
-
-	client, err := bigquery.NewClient(ctx, projectID, ops)
+func createJobInfo(projectId string, serviceAccountCredentialFile string) (*jobinfo.JobInfo, error) {
+	b, err := bqservice.NewBqService(serviceAccountCredentialFile)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		return nil, err
 	}
+	jobinfo := jobinfo.NewJobInfo(b, projectId)
+	return jobinfo, nil
+}
 
-	datasetName := "my_test"
+func main() {
+	var projectId, serviceAccountCredentialFile, targetJobId string
+	var rootCmd = &cobra.Command{Use: "bqjob"}
+	rootCmd.PersistentFlags().StringVar(&projectId, "project_id", "", "project_id")
+	rootCmd.PersistentFlags().StringVar(&serviceAccountCredentialFile, "service_account_credential_file", "", "service_account_credential_file")
 
-	dataset := client.Dataset(datasetName)
-	it := dataset.Tables(ctx)
-	for {
-		t, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			// TODO: Handle error.
-		}
-		pp.Print(t)
+	var cmdJobList = &cobra.Command{
+		Use:   "ls",
+		Short: "show bigquery job error list",
+		Long:  "show bigquery job error list",
+		Run: func(cmd *cobra.Command, args []string) {
+			jobinfo, err := createJobInfo(projectId, serviceAccountCredentialFile)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			var errorJobs []string
+			errorJobs, err = jobinfo.ListErrors("", errorJobs)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			for _, errorJob := range errorJobs {
+				fmt.Println(errorJob)
+			}
+		},
 	}
+	rootCmd.AddCommand(cmdJobList)
 
-	pp.Print("end")
+	var cmdJobShow = &cobra.Command{
+		Use:   "show",
+		Short: "show bigquery job deital",
+		Long:  "show bigquery job detail",
+		Run: func(cmd *cobra.Command, args []string) {
+			jobinfo, err := createJobInfo(projectId, serviceAccountCredentialFile)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			jobDetail, err := jobinfo.Show(targetJobId)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			for k, v := range jobDetail {
+				fmt.Println(k + ": \x1b[31m" + v + "\x1b[0m")
+			}
+		},
+	}
+	cmdJobShow.Flags().StringVar(&targetJobId, "job_id", "", "job_id")
+	rootCmd.AddCommand(cmdJobShow)
+
+	rootCmd.Execute()
 }
