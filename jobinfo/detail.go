@@ -63,10 +63,12 @@ func appendStatisticsLoad(job *bq.Job, outputs map[string]string) {
 func appendStatus(job *bq.Job, outputs map[string]string) {
 	outputs["State"] = job.Status.State
 	prefix := ""
+
 	if job.Status.ErrorResult != nil {
 		prefix = "ErrorResult"
 		errorMap := errorProtoToMap(job.Status.ErrorResult, prefix)
-		outputs = utils.MergeMap(outputs, errorMap)
+
+		utils.MergeMap(outputs, errorMap)
 	}
 
 	if job.Status.Errors != nil {
@@ -81,7 +83,7 @@ func appendStatusError(job *bq.Job, outputs map[string]string) {
 		index++
 		prefix = "errInStatus" + strconv.Itoa(index)
 		errorMap := errorProtoToMap(errInStatus, prefix)
-		outputs = utils.MergeMap(outputs, errorMap)
+		utils.MergeMap(outputs, errorMap)
 	}
 }
 
