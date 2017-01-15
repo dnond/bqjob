@@ -9,16 +9,10 @@ func Int64ToString(i int64) string {
 	return strconv.FormatInt(i, 10)
 }
 
-func MergeMap(m1, m2 map[string]string) map[string]string {
-	ans := map[string]string{}
-
-	for k, v := range m1 {
-		ans[k] = v
-	}
+func MergeMap(m1, m2 map[string]string) {
 	for k, v := range m2 {
-		ans[k] = v
+		m1[k] = v
 	}
-	return (ans)
 }
 
 func MsToTime(ms int64) (time.Time, error) {
