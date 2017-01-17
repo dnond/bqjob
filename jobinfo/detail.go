@@ -27,14 +27,22 @@ func (jobinfo *JobInfo) detail(job *bq.Job, outputs map[string]string) error {
 
 func appendConfiguration(job *bq.Job, outputs map[string]string) {
 	if job.Configuration.Load != nil {
+		outputs["DestinationTable"] = job.Configuration.Load.DestinationTable.TableId
 		outputs["DatasetId"] = job.Configuration.Load.DestinationTable.DatasetId
 		outputs["TableId"] = job.Configuration.Load.DestinationTable.TableId
 		outputs["MaxBadRecords"] = utils.Int64ToString(job.Configuration.Load.MaxBadRecords)
+		outputs["AllowQuotedNewlines"] = strconv.FormatBool(job.Configuration.Load.AllowQuotedNewlines)
 
 		if job.Configuration.Load.Schema != nil {
 			schema, _ := job.Configuration.Load.Schema.MarshalJSON()
 			outputs["Schema"] = string(schema)
 		}
+	}
+
+	if job.Configuration.Query != nil {
+		outputs["AllowLargeResults"] = strconv.FormatBool(job.Configuration.Query.AllowLargeResults)
+		outputs["UseLegacySql"] = strconv.FormatBool(job.Configuration.Query.UseLegacySql)
+		outputs["Query"] = job.Configuration.Query.Query
 	}
 }
 
@@ -51,6 +59,10 @@ func appendStatistics(job *bq.Job, outputs map[string]string) {
 	if job.Statistics.Load != nil {
 		appendStatisticsLoad(job, outputs)
 	}
+
+	if job.Statistics.Query != nil {
+		appendStatisticsQuery(job, outputs)
+	}
 }
 
 func appendStatisticsLoad(job *bq.Job, outputs map[string]string) {
@@ -58,6 +70,12 @@ func appendStatisticsLoad(job *bq.Job, outputs map[string]string) {
 	outputs["InputFiles"] = utils.Int64ToString(job.Statistics.Load.InputFiles)
 	outputs["OutputBytes"] = utils.Int64ToString(job.Statistics.Load.OutputBytes)
 	outputs["OutputRows"] = utils.Int64ToString(job.Statistics.Load.OutputRows)
+}
+
+func appendStatisticsQuery(job *bq.Job, outputs map[string]string) {
+	outputs["BillingTier"] = utils.Int64ToString(job.Statistics.Query.BillingTier)
+	outputs["TotalBytesBilled"] = utils.Int64ToString(job.Statistics.Query.TotalBytesBilled)
+	outputs["TotalBytesProcessed"] = utils.Int64ToString(job.Statistics.Query.TotalBytesProcessed)
 }
 
 func appendStatus(job *bq.Job, outputs map[string]string) {
