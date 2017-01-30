@@ -18,7 +18,7 @@ func createJobInfo(projectId string, serviceAccountCredentialFile string) (*jobi
 }
 
 func main() {
-	var projectId, serviceAccountCredentialFile, targetJobId string
+	var projectId, serviceAccountCredentialFile, target, targetJobId string
 	var rootCmd = &cobra.Command{Use: "bqjob"}
 	rootCmd.PersistentFlags().StringVar(&projectId, "project_id", "", "project_id")
 	rootCmd.PersistentFlags().StringVar(&serviceAccountCredentialFile, "service_account_credential_file", "", "service_account_credential_file")
@@ -34,18 +34,19 @@ func main() {
 				return
 			}
 
-			var errorJobs []string
-			errorJobs, err = jobinfo.ListErrors("", errorJobs)
+			var listedJobs []string
+			listedJobs, err = jobinfo.ListJobs("", target, listedJobs)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
 
-			for _, errorJob := range errorJobs {
-				fmt.Println(errorJob)
+			for _, eachJob := range listedJobs {
+				fmt.Println(eachJob)
 			}
 		},
 	}
+	cmdJobList.Flags().StringVar(&target, "target", "", "target")
 	rootCmd.AddCommand(cmdJobList)
 
 	var cmdJobShow = &cobra.Command{

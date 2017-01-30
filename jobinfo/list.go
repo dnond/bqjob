@@ -9,7 +9,7 @@ import (
 const maxResultPerRequest = 1000 //list取得時の１回の取得数
 const maxResult = 400            //結果取得数。これを超えると次の取得は行わない
 
-func (jobinfo *JobInfo) ListErrors(pageToken string, errorJobs []string) ([]string, error) {
+func (jobinfo *JobInfo) ListJobs(pageToken string, target string, listedJobs []string) ([]string, error) {
 	var err error
 
 	jobs, nextPageToken, err := jobinfo.getList(pageToken)
@@ -18,23 +18,32 @@ func (jobinfo *JobInfo) ListErrors(pageToken string, errorJobs []string) ([]stri
 	}
 
 	for _, job := range jobs {
-		if job.Status.ErrorResult != nil {
+		if target == "error" || target == "" {
+			if job.Status.ErrorResult != nil {
+				ctime := ""
+				if job.Statistics != nil {
+					creationTime, _ := utils.MsToTime(job.Statistics.CreationTime)
+					ctime = creationTime.Format("2006-01-02 15:04:05")
+				}
+				listedJobs = append(listedJobs, "\x1b[31m"+ctime+"\x1b[0m "+job.JobReference.JobId+" "+job.Status.ErrorResult.Reason)
+			}
+		} else {
 			ctime := ""
 			if job.Statistics != nil {
 				creationTime, _ := utils.MsToTime(job.Statistics.CreationTime)
 				ctime = creationTime.Format("2006-01-02 15:04:05")
 			}
-			errorJobs = append(errorJobs, "\x1b[31m"+ctime+"\x1b[0m "+job.JobReference.JobId+" "+job.Status.ErrorResult.Reason)
+			listedJobs = append(listedJobs, "\x1b[31m"+ctime+"\x1b[0m "+job.JobReference.JobId+" "+job.Status.State)
 		}
 	}
 
-	if nextPageToken != "" && len(errorJobs) <= maxResult {
-		errorJobs, err = jobinfo.ListErrors(nextPageToken, errorJobs)
+	if nextPageToken != "" && len(listedJobs) <= maxResult {
+		listedJobs, err = jobinfo.ListJobs(nextPageToken, target, listedJobs)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return errorJobs, nil
+	return listedJobs, nil
 }
 
 func (jobinfo *JobInfo) getList(pageToken string) ([]*bq.JobListJobs, string, error) {
