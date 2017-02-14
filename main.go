@@ -72,5 +72,27 @@ func main() {
 	cmdJobShow.Flags().StringVar(&targetJobId, "job_id", "", "job_id")
 	rootCmd.AddCommand(cmdJobShow)
 
+	var cmdJobCancel = &cobra.Command{
+		Use:   "cancel",
+		Short: "cancel bigquery job deital",
+		Long:  "cancel bigquery job detail",
+		Run: func(cmd *cobra.Command, args []string) {
+			jobinfo, err := createJobInfo(projectId, serviceAccountCredentialFile)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			result, err := jobinfo.Stop(targetJobId)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println("\x1b[31m" + result + "\x1b[0m")
+		},
+	}
+	cmdJobCancel.Flags().StringVar(&targetJobId, "job_id", "", "job_id")
+	rootCmd.AddCommand(cmdJobCancel)
+
 	rootCmd.Execute()
 }
