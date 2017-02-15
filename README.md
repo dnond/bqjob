@@ -3,7 +3,7 @@
 ## list BigQuery jobs(error only)
 
 ```
-bqjob_darwin_amd64 ls --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id
+bqjob ls --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id
 ```
 
 ### wip!
@@ -11,7 +11,7 @@ bqjob_darwin_amd64 ls --service_account_credential_file=/hogehoge/service_accoun
 added target flag
 
 ```
-bqjob_darwin_amd64 ls --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id --target=ALL
+bqjob ls --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id --target=ALL
 ```
 
 targetにerror以外を設定すると、すべてのjobをリストします
@@ -20,5 +20,11 @@ targetにerror以外を設定すると、すべてのjobをリストします
 ## show JobDetail
 
 ```
-bqjob_darwin_amd64 show --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id --job_id=job_abcdefdf1234
+bqjob show --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id --job_id=job_abcdefdf1234
+```
+
+## cancel job
+
+```
+bqjob cancel --service_account_credential_file=/hogehoge/service_account_credential.json  --project_id=your-project-id --job_id=job_abcdefdf1234
 ```
